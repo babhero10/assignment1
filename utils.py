@@ -25,21 +25,26 @@ def cosine(u, v):
     return (u[0] * v[0] + u[1] * v[1]) / (np.sqrt(u[0]**2 + u[1]**2) * np.sqrt(v[0]**2 + v[1]**2))
 
 
-def annotate(impath):
-    im = Image.open(impath)
-    im = np.array(im)
+def annotate(impath, n_points=0):
+    import matplotlib
+    # Save current backend (to restore later)
+    current_backend = matplotlib.get_backend()
+    
+    # Switch to interactive backend for clicking
+    matplotlib.use('TkAgg', force=True)
+    import matplotlib.pyplot as plt  # reimport after backend switch
 
-    clicks = []
+    im = np.array(Image.open(impath))
+    plt.imshow(im)
+    plt.title("Click on the points, close window when done")
 
-    def click(event):
-        x, y = event.xdata, event.ydata
-        clicks.append([x, y, 1.])
+    # Wait for user clicks
+    clicks = plt.ginput(n=n_points, timeout=0)  # 0 = unlimited time
+    plt.close()
 
-    fig = plt.figure(1)
-    ax = fig.add_subplot(111)
-    ax.imshow(im)
+    # Restore original backend (inline for Jupyter)
+    matplotlib.use(current_backend, force=True)
+    import matplotlib.pyplot as plt  # reimport again
 
-    _ = fig.canvas.mpl_connect('button_press_event', click)
-    plt.show()
-
-    return clicks
+    print(f"Collected {len(clicks)} points")
+    return np.array(clicks)
